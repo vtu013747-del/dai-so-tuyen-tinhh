@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linear Algebra Master - Đại Số Tuyến Tính</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- KaTeX CSS & JS for Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  
+  <!-- Vue 3 CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+    .katex { font-size: 1.08em !important; }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <div id="app" class="flex-grow flex flex-col">
+    <!-- Header / Navigation Bar -->
+    <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- Logo & Title -->
+          <div class="flex items-center space-x-3 cursor-pointer" @click="activeTab = 'practice'">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+              <i class="fas fa-square-root-variable text-white text-xl"></i>
+            </div>
+            <div>
+              <h1 class="font-bold text-lg text-white leading-tight">Đại Số Tuyến Tính</h1>
+              <p class="text-xs text-indigo-400 font-medium">Linear Algebra Master</p>
+            </div>
+          </div>
+
+          <!-- Desktop Navigation Tabs -->
+          <nav class="hidden md:flex space-x-1 lg:space-x-2">
+            <button v-for="tab in tabs" :key="tab.id"
+              @click="switchTab(tab.id)"
+              :class="[
+                'px-3 lg:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2',
+                activeTab === tab.id 
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' 
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+              ]">
+              <i :class="tab.icon"></i>
+              <span>{{ tab.name }}</span>
+            </button>
+          </nav>
+
+          <!-- Mobile Menu Button -->
+          <div class="md:hidden flex items-center">
+            <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-slate-300 hover:text-white p-2 focus:outline-none">
+              <i :class="mobileMenuOpen ? 'fas fa-xmark text-2xl' : 'fas fa-bars text-2xl'"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Navigation Drawer -->
+      <div v-if="mobileMenuOpen" class="md:hidden bg-slate-900 border-b border-slate-800 px-4 pt-2 pb-4 space-y-2">
+        <button v-for="tab in tabs" :key="tab.id"
+          @click="switchTab(tab.id); mobileMenuOpen = false;"
+          :class="[
+            'w-full px-4 py-3 rounded-xl text-sm font-medium flex items-center space-x-3 transition-all',
+            activeTab === tab.id 
+              ? 'bg-indigo-600 text-white shadow-md' 
+              : 'text-slate-300 hover:bg-slate-800'
+          ]">
+          <i :class="tab.icon + ' text-lg w-6'"></i>
+          <span>{{ tab.name }}</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+      <!-- TAB 1: ÔN TẬP THEO CHƯƠNG -->
+      <section v-if="activeTab === 'practice'" class="space-y-6">
+        <!-- Chapter Selector Banner -->
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 sm:p-6 shadow-xl">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <i class="fas fa-book-open text-indigo-400"></i>
+                Ôn Tập Theo Chương
+              </h2>
+              <p class="text-sm text-slate-400 mt-1">Lựa chọn chương để luyện tập 20 câu hỏi có kèm lời giải chi tiết KaTeX.</p>
+            </div>
+            <!-- Chapter Filter Buttons -->
+            <div class="flex flex-wrap gap-2">
+              <button v-for="c in chapters" :key="c.id"
+                @click="selectChapter(c.id)"
+                :class="[
+                  'px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center space-x-2',
+                  selectedChapter === c.id 
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30 ring-2 ring-indigo-400' 
+                    : 'bg-slate-900/80 text-slate-300 hover:bg-slate-700 border border-slate-700'
+                ]">
+                <span>Chương {{ c.id }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Question Grid Navigator for Chapter -->
+          <div class="mt-6 pt-4 border-t border-slate-700/60">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Danh sách câu hỏi (Chương {{ selectedChapter }})
+              </span>
+              <span class="text-xs text-indigo-400 font-medium">
+                Đã hoàn thành: {{ getChapterAnsweredCount(selectedChapter) }}/20 câu
+              </span>
+            </div>
+            <div class="grid grid-cols-5 sm:grid-cols-10 md:grid-cols-20 gap-2">
+              <button v-for="(q, idx) in currentChapterQuestions" :key="q.id"
+                @click="currentQuestionIdx = idx; triggerMathRender();"
+                :class="[
+                  'h-10 rounded-lg text-xs font-bold transition-all flex items-center justify-center border',
+                  currentQuestionIdx === idx ? 'ring-2 ring-indigo-400 border-indigo-500 bg-indigo-900/60 text-white' : '',
+                  practiceAnswers[q.id] !== undefined
+                    ? (practiceAnswers[q.id] === q.correct 
+                        ? 'bg-emerald-900/50 border-emerald-500 text-emerald-300' 
+                        : 'bg-rose-900/50 border-rose-500 text-rose-300')
+                    : (currentQuestionIdx !== idx ? 'bg-slate-900/60 border-slate-700 text-slate-400 hover:border-slate-500' : '')
+                ]">
+                {{ idx + 1 }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Single Question Card -->
+        <div v-if="currentQuestion" class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+            <div class="flex items-center space-x-3">
+              <span class="bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 text-xs font-bold px-3 py-1 rounded-full">
+                Câu {{ currentQuestionIdx + 1 }} / 20
+              </span>
+              <span class="text-xs text-slate-400 font-medium">
+                Chương {{ selectedChapter }}: {{ chapters[selectedChapter-1].title }}
+              </span>
+            </div>
+            <button @click="resetCurrentQuestion" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
+              <i class="fas fa-rotate-left"></i> Làm lại câu này
+            </button>
+          </div>
+
+          <!-- Question Content -->
+          <div class="text-lg text-slate-100 font-medium leading-relaxed math-container">
+            {{ currentQuestion.question }}
+          </div>
+
+          <!-- Options List -->
+          <div class="grid grid-cols-1 gap-3">
+            <button v-for="(opt, oIdx) in currentQuestion.options" :key="oIdx"
+              @click="answerPracticeQuestion(currentQuestion.id, oIdx)"
+              :class="[
+                'p-4 rounded-xl border text-left transition-all flex items-start space-x-3 group relative',
+                getOptionStyle(currentQuestion, oIdx)
+              ]">
+              <span :class="[
+                'w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 border',
+                getOptionBadgeStyle(currentQuestion, oIdx)
+              ]">
+                {{ ['A', 'B', 'C', 'D'][oIdx] }}
+              </span>
+              <span class="text-base text-slate-200 math-container flex-grow pt-0.5">{{ opt }}</span>
+              <i v-if="practiceAnswers[currentQuestion.id] !== undefined && oIdx === currentQuestion.correct" class="fas fa-circle-check text-emerald-400 text-xl ml-2"></i>
+              <i v-if="practiceAnswers[currentQuestion.id] === oIdx && oIdx !== currentQuestion.correct" class="fas fa-circle-xmark text-rose-400 text-xl ml-2"></i>
+            </button>
+          </div>
+
+          <!-- Explanation Box -->
+          <div v-if="practiceAnswers[currentQuestion.id] !== undefined" class="mt-6 bg-slate-900/90 border border-slate-700 rounded-xl p-5 space-y-3">
+            <div class="flex items-center space-x-2 text-indigo-400 font-bold text-sm">
+              <i class="fas fa-lightbulb"></i>
+              <span>Lời giải & Giải thích chi tiết:</span>
+            </div>
+            <div class="text-sm text-slate-300 leading-relaxed math-container">
+              {{ currentQuestion.explanation }}
+            </div>
+          </div>
+
+          <!-- Bottom Navigation Controls -->
+          <div class="flex items-center justify-between pt-4 border-t border-slate-700">
+            <button @click="prevQuestion" :disabled="currentQuestionIdx === 0"
+              class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium text-sm rounded-xl transition-all flex items-center gap-2">
+              <i class="fas fa-arrow-left"></i> Câu trước
+            </button>
+            <button @click="nextQuestion" :disabled="currentQuestionIdx === currentChapterQuestions.length - 1"
+              class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium text-sm rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-indigo-600/30">
+              Câu tiếp <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: THI THỬ (MOCK EXAM) -->
+      <section v-if="activeTab === 'exam'" class="space-y-6">
+        <!-- Exam State 1: Start Screen -->
+        <div v-if="examState === 'idle'" class="max-w-2xl mx-auto bg-slate-800/90 border border-slate-700 rounded-2xl p-8 shadow-2xl text-center space-y-6">
+          <div class="w-16 h-16 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-2xl flex items-center justify-center mx-auto text-3xl">
+            <i class="fas fa-stopwatch"></i>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold text-white">Thi Thử Đại Số Tuyến Tính</h2>
+            <p class="text-slate-400 text-sm mt-2">Bài thi chuẩn cấu trúc gồm 20 câu hỏi ngẫu nhiên từ 3 chương. Thời gian làm bài 30 phút.</p>
+          </div>
+          <div class="grid grid-cols-3 gap-4 text-left bg-slate-900/60 p-4 rounded-xl border border-slate-700/60">
+            <div>
+              <span class="text-xs text-slate-400 block">Số lượng:</span>
+              <span class="font-bold text-white text-base">20 Câu hỏi</span>
+            </div>
+            <div>
+              <span class="text-xs text-slate-400 block">Thời gian:</span>
+              <span class="font-bold text-white text-base">30 Phút</span>
+            </div>
+            <div>
+              <span class="text-xs text-slate-400 block">Cấu trúc:</span>
+              <span class="font-bold text-white text-base">Trắc nghiệm</span>
+            </div>
+          </div>
+          <button @click="startExam" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition-all text-base flex items-center justify-center gap-2">
+            <i class="fas fa-play"></i> Bắt Đầu Làm Bài Thi
+          </button>
+        </div>
+
+        <!-- Exam State 2: Active Exam -->
+        <div v-if="examState === 'active'" class="space-y-6">
+          <!-- Top Sticky Bar -->
+          <div class="bg-slate-800/95 border border-slate-700 rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-4 sticky top-20 z-40 backdrop-blur-md">
+            <div class="flex items-center space-x-3">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Bài Thi Thử</span>
+              <span class="bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 text-xs font-bold px-3 py-1 rounded-full">
+                Đã trả lời: {{ answeredExamCount }}/20
+              </span>
+            </div>
+            <div class="flex items-center space-x-4">
+              <div class="flex items-center space-x-2 bg-slate-900 px-4 py-2 rounded-xl border border-slate-700">
+                <i class="fas fa-clock text-amber-400"></i>
+                <span class="font-mono font-bold text-lg text-amber-300">{{ formattedExamTime }}</span>
+              </div>
+              <button @click="confirmSubmitExam" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-emerald-600/30 flex items-center gap-2">
+                <i class="fas fa-paper-plane"></i> Nộp Bài
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Left: Current Question -->
+            <div class="lg:col-span-3 bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-6">
+              <div class="flex items-center justify-between border-b border-slate-700 pb-4">
+                <span class="font-bold text-slate-300">Câu hỏi {{ examCurrentIdx + 1 }}</span>
+                <span class="text-xs text-slate-400">Chương {{ examQuestions[examCurrentIdx].chapter }}</span>
+              </div>
+              <div class="text-lg text-slate-100 font-medium leading-relaxed math-container">
+                {{ examQuestions[examCurrentIdx].question }}
+              </div>
+              <div class="grid grid-cols-1 gap-3">
+                <button v-for="(opt, oIdx) in examQuestions[examCurrentIdx].options" :key="oIdx"
+                  @click="selectExamOption(examCurrentIdx, oIdx)"
+                  :class="[
+                    'p-4 rounded-xl border text-left transition-all flex items-start space-x-3',
+                    examUserAnswers[examCurrentIdx] === oIdx
+                      ? 'bg-indigo-900/50 border-indigo-500 text-white ring-1 ring-indigo-500'
+                      : 'bg-slate-900/60 border-slate-700/80 hover:border-slate-500 text-slate-300'
+                  ]">
+                  <span :class="[
+                    'w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 border',
+                    examUserAnswers[examCurrentIdx] === oIdx
+                      ? 'bg-indigo-600 border-indigo-400 text-white'
+                      : 'bg-slate-800 border-slate-700 text-slate-400'
+                  ]">
+                    {{ ['A', 'B', 'C', 'D'][oIdx] }}
+                  </span>
+                  <span class="text-base math-container flex-grow pt-0.5">{{ opt }}</span>
+                </button>
+              </div>
+              <div class="flex items-center justify-between pt-4 border-t border-slate-700">
+                <button @click="examCurrentIdx--" :disabled="examCurrentIdx === 0"
+                  class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-white font-medium text-sm rounded-xl transition-all">
+                  <i class="fas fa-arrow-left mr-2"></i> Câu trước
+                </button>
+                <button @click="examCurrentIdx++" :disabled="examCurrentIdx === examQuestions.length - 1"
+                  class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-medium text-sm rounded-xl transition-all">
+                  Câu tiếp <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Right Palette Grid -->
+            <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-5 shadow-xl space-y-4 h-fit">
+              <h3 class="text-sm font-bold text-slate-300 border-b border-slate-700 pb-2">Danh sách câu hỏi</h3>
+              <div class="grid grid-cols-5 gap-2">
+                <button v-for="(q, idx) in examQuestions" :key="idx"
+                  @click="examCurrentIdx = idx; triggerMathRender();"
+                  :class="[
+                    'h-10 rounded-lg text-xs font-bold transition-all flex items-center justify-center border',
+                    examCurrentIdx === idx ? 'ring-2 ring-indigo-400 border-indigo-500 font-extrabold' : '',
+                    examUserAnswers[idx] !== undefined 
+                      ? 'bg-indigo-600 border-indigo-400 text-white shadow-sm' 
+                      : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500'
+                  ]">
+                  {{ idx + 1 }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Exam State 3: Results & Detailed Review -->
+        <div v-if="examState === 'result'" class="space-y-6">
+          <!-- Result Summary Banner -->
+          <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl text-center space-y-6">
+            <div class="inline-flex p-4 rounded-full bg-slate-900 border border-slate-700 mb-2">
+              <div class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">
+                {{ examScore }} / 20
+              </div>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold text-white">Kết Quả Bài Thi Thử</h2>
+              <p class="text-slate-400 text-sm mt-1">
+                Tỷ lệ chính xác: <span class="font-bold text-emerald-400">{{ (examScore / 20 * 100).toFixed(0) }}%</span> | 
+                Thời gian làm bài: <span class="font-bold text-indigo-400">{{ formattedTimeSpent }}</span>
+              </p>
+            </div>
+            <div class="flex justify-center gap-4">
+              <button @click="startExam" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/30 flex items-center gap-2">
+                <i class="fas fa-rotate-right"></i> Thi Thử Lại
+              </button>
+            </div>
+          </div>
+
+          <!-- Review Questions List -->
+          <div class="space-y-6">
+            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+              <i class="fas fa-list-check text-indigo-400"></i> Xem Chấm Điểm & Giải Thích Chi Tiết
+            </h3>
+            <div v-for="(q, idx) in examQuestions" :key="q.id" class="bg-slate-800/90 border border-slate-700 rounded-2xl p-6 shadow-lg space-y-4">
+              <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+                <span class="font-bold text-slate-300">Câu {{ idx + 1 }}</span>
+                <span :class="[
+                  'text-xs font-bold px-3 py-1 rounded-full border',
+                  examUserAnswers[idx] === q.correct 
+                    ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/40' 
+                    : 'bg-rose-900/40 text-rose-300 border-rose-500/40'
+                ]">
+                  {{ examUserAnswers[idx] === q.correct ? 'ĐÚNG' : 'SAI' }}
+                </span>
+              </div>
+              <div class="text-base text-slate-100 font-medium leading-relaxed math-container">
+                {{ q.question }}
+              </div>
+              <div class="grid grid-cols-1 gap-2">
+                <div v-for="(opt, oIdx) in q.options" :key="oIdx"
+                  :class="[
+                    'p-3.5 rounded-xl border text-sm flex items-start space-x-3',
+                    oIdx === q.correct 
+                      ? 'bg-emerald-900/30 border-emerald-500 text-emerald-200' 
+                      : (examUserAnswers[idx] === oIdx ? 'bg-rose-900/30 border-rose-500 text-rose-200' : 'bg-slate-900/50 border-slate-800 text-slate-400')
+                  ]">
+                  <span class="font-bold shrink-0">{{ ['A','B','C','D'][oIdx] }}.</span>
+                  <span class="math-container flex-grow">{{ opt }}</span>
+                  <i v-if="oIdx === q.correct" class="fas fa-check text-emerald-400"></i>
+                  <i v-if="examUserAnswers[idx] === oIdx && oIdx !== q.correct" class="fas fa-xmark text-rose-400"></i>
+                </div>
+              </div>
+              <div class="bg-slate-900/90 border border-slate-700/80 rounded-xl p-4 text-sm text-slate-300 space-y-2">
+                <span class="font-bold text-indigo-400 block"><i class="fas fa-lightbulb mr-1"></i> Lời giải:</span>
+                <div class="math-container leading-relaxed">{{ q.explanation }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: CÔNG CỤ TÍNH TOÁN (SOLVERS) -->
+      <section v-if="activeTab === 'solvers'" class="space-y-6">
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-6 shadow-xl space-y-6">
+          <div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <i class="fas fa-calculator text-indigo-400"></i> Công Cụ Tính Toán Đại Số Tuyến Tính
+            </h2>
+            <p class="text-sm text-slate-400 mt-1">Giải nhanh Định thức, Phép toán Vector và Phép toán Ma trận với các bước chi tiết.</p>
+          </div>
+
+          <!-- Tool Selector -->
+          <div class="flex flex-wrap gap-2 border-b border-slate-700 pb-4">
+            <button @click="solverMode = 'det'; triggerMathRender();"
+              :class="['px-4 py-2 rounded-xl text-sm font-bold transition-all', solverMode === 'det' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:bg-slate-700']">
+              Định Thức Ma Trận
+            </button>
+            <button @click="solverMode = 'vector'; triggerMathRender();"
+              :class="['px-4 py-2 rounded-xl text-sm font-bold transition-all', solverMode === 'vector' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:bg-slate-700']">
+              Phép Toán Vector
+            </button>
+            <button @click="solverMode = 'matrix'; triggerMathRender();"
+              :class="['px-4 py-2 rounded-xl text-sm font-bold transition-all', solverMode === 'matrix' ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400 hover:bg-slate-700']">
+              Nhân & Chuyển Vị Ma Trận
+            </button>
+          </div>
+
+          <!-- Solver 1: Determinants -->
+          <div v-if="solverMode === 'det'" class="space-y-6">
+            <div class="flex items-center space-x-4">
+              <label class="text-sm text-slate-300 font-semibold">Kích thước ma trận:</label>
+              <button @click="detSize = 2; triggerMathRender();" :class="['px-3 py-1.5 rounded-lg text-xs font-bold', detSize === 2 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400']">2 x 2</button>
+              <button @click="detSize = 3; triggerMathRender();" :class="['px-3 py-1.5 rounded-lg text-xs font-bold', detSize === 3 ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-slate-400']">3 x 3</button>
+            </div>
+
+            <!-- Matrix Inputs Grid -->
+            <div class="bg-slate-900/90 border border-slate-700 p-6 rounded-2xl max-w-md mx-auto space-y-4">
+              <span class="text-xs text-slate-400 block text-center">Nhập các phần tử ma trận $A$:</span>
+              
+              <!-- 2x2 Input -->
+              <div v-if="detSize === 2" class="grid grid-cols-2 gap-3 max-w-xs mx-auto">
+                <input v-model.number="det2[0][0]" type="number" class="p-3 bg-slate-800 border border-slate-700 rounded-xl text-center text-white font-bold text-lg focus:ring-2 focus:ring-indigo-500">
+                <input v-model.number="det2[0][1]" type="number" class="p-3 bg-slate-800 border border-slate-700 rounded-xl text-center text-white font-bold text-lg focus:ring-2 focus:ring-indigo-500">
+                <input v-model.number="det2[1][0]" type="number" class="p-3 bg-slate-800 border border-slate-700 rounded-xl text-center text-white font-bold text-lg focus:ring-2 focus:ring-indigo-500">
+                <input v-model.number="det2[1][1]" type="number" class="p-3 bg-slate-800 border border-slate-700 rounded-xl text-center text-white font-bold text-lg focus:ring-2 focus:ring-indigo-500">
+              </div>
+
+              <!-- 3x3 Input -->
+              <div v-if="detSize === 3" class="grid grid-cols-3 gap-3">
+                <template v-for="(r, rI) in 3" :key="rI">
+                  <input v-for="(c, cI) in 3" :key="cI" v-model.number="det3[rI][cI]" type="number" class="p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-center text-white font-bold text-base focus:ring-2 focus:ring-indigo-500">
+                </template>
+              </div>
+            </div>
+
+            <!-- Result Box -->
+            <div class="bg-slate-900 border border-indigo-500/40 p-6 rounded-2xl space-y-3">
+              <span class="text-indigo-400 font-bold text-sm block"><i class="fas fa-square-check mr-2"></i> Kết quả tính Định thức:</span>
+              <div class="text-2xl font-extrabold text-emerald-400">
+                $\det(A) = {{ computedDet }}$
+              </div>
+              <div class="text-sm text-slate-300 math-container pt-2 border-t border-slate-800">
+                <p v-if="detSize === 2">
+                  Công thức: $\det(A) = (a_{11} \cdot a_{22}) - (a_{12} \cdot a_{21}) = ({{det2[0][0]}} \cdot {{det2[0][1]}}) - ({{det2[0][1]}} \cdot {{det2[1][0]}}) = {{ computedDet }}$
+                </p>
+                <p v-else>
+                  Tính theo Quy tắc Sarrus hoặc Phát triển Laplace cho ma trận $3 \times 3$.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Solver 2: Vector Operations -->
+          <div v-if="solverMode === 'vector'" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                <label class="text-xs font-bold text-slate-300 block">Vector $u$ (phân cách bằng dấu phẩy):</label>
+                <input v-model="vecUInput" type="text" placeholder="1, 2, 3" class="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl text-white font-mono">
+              </div>
+              <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                <label class="text-xs font-bold text-slate-300 block">Vector $v$ (phân cách bằng dấu phẩy):</label>
+                <input v-model="vecVInput" type="text" placeholder="4, 5, 6" class="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl text-white font-mono">
+              </div>
+            </div>
+
+            <div v-if="computedVectorStats" class="bg-slate-900 border border-indigo-500/40 p-6 rounded-2xl space-y-4">
+              <span class="text-indigo-400 font-bold text-sm block"><i class="fas fa-diagram-project mr-2"></i> Kết quả Phép toán Vector:</span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-200 math-container">
+                <div class="p-3 bg-slate-800 rounded-xl border border-slate-700">
+                  <span class="text-xs text-slate-400 block">Tích vô hướng $u \cdot v$:</span>
+                  <span class="font-bold text-indigo-300 text-lg">{{ computedVectorStats.dot }}</span>
+                </div>
+                <div class="p-3 bg-slate-800 rounded-xl border border-slate-700">
+                  <span class="text-xs text-slate-400 block">Độ dài $\|u\|$ & $\|v\|$:</span>
+                  <span class="font-bold text-indigo-300 text-base">$\|u\| = {{ computedVectorStats.normU.toFixed(3) }}$, $\|v\| = {{ computedVectorStats.normV.toFixed(3) }}$</span>
+                </div>
+                <div class="p-3 bg-slate-800 rounded-xl border border-slate-700">
+                  <span class="text-xs text-slate-400 block">Khoảng cách $d(u, v)$:</span>
+                  <span class="font-bold text-indigo-300 text-base">{{ computedVectorStats.dist.toFixed(3) }}</span>
+                </div>
+                <div class="p-3 bg-slate-800 rounded-xl border border-slate-700">
+                  <span class="text-xs text-slate-400 block">Góc giữa $u$ và $v$:</span>
+                  <span class="font-bold text-indigo-300 text-base">{{ computedVectorStats.angleDeg.toFixed(2) }}^\circ</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Solver 3: Matrix Multiplication -->
+          <div v-if="solverMode === 'matrix'" class="space-y-6">
+            <p class="text-sm text-slate-300">Tính tích $A \times B$ cho hai ma trận $2 \times 2$:</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Matrix A -->
+              <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
+                <span class="text-xs font-bold text-indigo-400 block">Ma trận $A_{2 \times 2}$</span>
+                <div class="grid grid-cols-2 gap-2 max-w-xs">
+                  <input v-model.number="matA[0][0]" type="number" class="p-2 bg-slate-800 border border-slate-700 rounded-lg text-center text-white">
+                  <input v-model.number="matA[0][1]" type="number" class="p-2 bg-slate-800 border border-slate-700 rounded-lg text-center text-white">
+                  <input v-model.number="matA[1][0]" type="number" class="p-2 bg-slate-800 border border-slate-700 rounded-lg text-center text-white">
+                  <input v-model.number="matA[1][1]" type="number" class="p-2 bg-slate-800 border border-slate-700 rounded-lg text-center text-white">
+                </div>
+              </div>
+              <!-- Matrix B -->
+              <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
+                <span class="text-xs font-bold text-indigo-400 block">Ma trận $B_{2 \times 2}$</span>
+                <div class="grid grid-cols-2 gap-2 max-w-xs">
+                  <input v-model.number="matB[0][0]" type="number" class="p-2 bg-slate-800 border border-slate-700 rounded-lg text-center text-white">
+                  <input v-model.number="matB[0][1]" type="number" class="p-2 bg-slate-800 border border-slate-700 rounded-lg text-center text-white">
+                  <input v-model.number="matB[1][0]" type="number" class="p-2 bg-slate-800 border border-slate-700 rounded-lg text-center text-white">
+                  <input v-model.number="matB[1][1]" type="number" class="p-2 bg-slate-800 border border-slate-700 rounded-lg text-center text-white">
+                </div>
+              </div>
+            </div>
+
+            <!-- Result Matrix -->
+            <div class="bg-slate-900 border border-indigo-500/40 p-6 rounded-2xl space-y-3">
+              <span class="text-indigo-400 font-bold text-sm block"><i class="fas fa-equals mr-2"></i> Kết quả $C = A \times B$:</span>
+              <div class="text-xl font-bold text-emerald-400 math-container">
+                $$ \begin{pmatrix} {{ matA[0][0]*matB[0][0] + matA[0][1]*matB[1][0] }} & {{ matA[0][0]*matB[0][1] + matA[0][1]*matB[1][1] }} \\ {{ matA[1][0]*matB[0][0] + matA[1][1]*matB[1][0] }} & {{ matA[1][0]*matB[0][1] + matA[1][1]*matB[1][1] }} \end{pmatrix} $$
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: SỔ TAY LÝ THUYẾT -->
+      <section v-if="activeTab === 'theory'" class="space-y-6">
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-6 shadow-xl space-y-6">
+          <div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <i class="fas fa-lightbulb text-indigo-400"></i> Sổ Tay Lý Thuyết & Công Thức Core
+            </h2>
+            <p class="text-sm text-slate-400 mt-1">Tóm tắt toàn bộ định lý, tính chất và công thức trọng tâm Đại Số Tuyến Tính.</p>
+          </div>
+
+          <!-- Theory Topics Accordion -->
+          <div class="space-y-4">
+            <!-- Topic 1 -->
+            <div class="bg-slate-900/90 border border-slate-700/80 rounded-xl p-5 space-y-3">
+              <h3 class="text-lg font-bold text-indigo-300 flex items-center gap-2">
+                <i class="fas fa-bookmark text-indigo-400"></i> Chương 1: Ma trận, Định thức & Hệ PTTT
+              </h3>
+              <div class="text-sm text-slate-300 leading-relaxed math-container space-y-2">
+                <p><b>1. Định lý Kronecker - Capelli:</b> Hệ phương trình tuyến tính $Ax = b$ có nghiệm $\iff \text{rank}(A) = \text{rank}(\bar{A})$.</p>
+                <ul class="list-disc pl-5 space-y-1 text-slate-300">
+                  <li>Nếu $\text{rank}(A) \neq \text{rank}(\bar{A}) \implies$ Hệ <b>vô nghiệm</b>.</li>
+                  <li>Nếu $\text{rank}(A) = \text{rank}(\bar{A}) = n \implies$ Hệ có <b>nghiệm duy nhất</b>.</li>
+                  <li>Nếu $\text{rank}(A) = \text{rank}(\bar{A}) < n \implies$ Hệ có <b>vô số nghiệm</b> (phụ thuộc $n - r$ tham số).</li>
+                </ul>
+                <p class="pt-2"><b>2. Tính chất Định thức:</b> $\det(A B) = \det(A) \cdot \det(B)$, $\det(A^T) = \det(A)$, và $\det(kA) = k^n \det(A)$ với $A_{n \times n}$.</p>
+              </div>
+            </div>
+
+            <!-- Topic 2 -->
+            <div class="bg-slate-900/90 border border-slate-700/80 rounded-xl p-5 space-y-3">
+              <h3 class="text-lg font-bold text-indigo-300 flex items-center gap-2">
+                <i class="fas fa-bookmark text-indigo-400"></i> Chương 2: Không gian Vectơ & Ánh xạ tuyến tính
+              </h3>
+              <div class="text-sm text-slate-300 leading-relaxed math-container space-y-2">
+                <p><b>1. Độc lập tuyến tính:</b> Tập hợp $\{v_1, v_2, \dots, v_k\}$ độc lập tuyến tính $\iff c_1 v_1 + c_2 v_2 + \dots + c_k v_k = 0 \implies c_1 = c_2 = \dots = c_k = 0$.</p>
+                <p><b>2. Định lý Rank - Nullity:</b> Cho ánh xạ tuyến tính $f: V \to W$, ta có công thức số chiều:</p>
+                <p class="text-center">$$ \dim(\ker f) + \dim(\text{Im} f) = \dim(V) $$</p>
+              </div>
+            </div>
+
+            <!-- Topic 3 -->
+            <div class="bg-slate-900/90 border border-slate-700/80 rounded-xl p-5 space-y-3">
+              <h3 class="text-lg font-bold text-indigo-300 flex items-center gap-2">
+                <i class="fas fa-bookmark text-indigo-400"></i> Chương 3: Trị riêng, Vectơ riêng & Dạng toàn phương
+              </h3>
+              <div class="text-sm text-slate-300 leading-relaxed math-container space-y-2">
+                <p><b>1. Phương trình đặc trưng:</b> $P(\lambda) = \det(A - \lambda I) = 0$.</p>
+                <p><b>2. Tiêu chuẩn Sylvester (Dạng toàn phương):</b> Dạng toàn phương $Q(x) = x^T A x$ xác định dương $\iff$ Mọi định thức con chính $\Delta_1, \Delta_2, \dots, \Delta_n > 0$.</p>
+                <p><b>3. Tổng & Tích trị riêng:</b> $\sum \lambda_i = \text{trace}(A)$ và $\prod \lambda_i = \det(A)$.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: THỐNG KÊ TIẾN ĐỘ -->
+      <section v-if="activeTab === 'stats'" class="space-y-6">
+        <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-6 shadow-xl space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <i class="fas fa-chart-bar text-indigo-400"></i> Thống Kê Tiến Độ Học Tập
+              </h2>
+              <p class="text-sm text-slate-400 mt-1">Dữ liệu được lưu tự động trên thiết bị cá nhân (LocalStorage).</p>
+            </div>
+            <button @click="clearStats" class="px-4 py-2 bg-rose-600/20 text-rose-300 hover:bg-rose-600/30 border border-rose-500/30 text-xs font-bold rounded-xl transition-all">
+              <i class="fas fa-trash mr-1"></i> Xóa lịch sử
+            </button>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-slate-900/90 p-5 rounded-2xl border border-slate-700">
+              <span class="text-xs text-slate-400 block font-semibold">Đã Luyện Tập</span>
+              <span class="text-3xl font-extrabold text-indigo-400 mt-1 block">{{ totalPracticeAnswered }} / 60</span>
+              <span class="text-xs text-slate-400 mt-1 block">Câu hỏi</span>
+            </div>
+            <div class="bg-slate-900/90 p-5 rounded-2xl border border-slate-700">
+              <span class="text-xs text-slate-400 block font-semibold">Tỷ Lệ Luyện Đúng</span>
+              <span class="text-3xl font-extrabold text-emerald-400 mt-1 block">{{ practiceAccuracy }}%</span>
+              <span class="text-xs text-slate-400 mt-1 block">Độ chính xác</span>
+            </div>
+            <div class="bg-slate-900/90 p-5 rounded-2xl border border-slate-700">
+              <span class="text-xs text-slate-400 block font-semibold">Số Bài Thi Thử</span>
+              <span class="text-3xl font-extrabold text-amber-400 mt-1 block">{{ examHistory.length }}</span>
+              <span class="text-xs text-slate-400 mt-1 block">Lần thi</span>
+            </div>
+            <div class="bg-slate-900/90 p-5 rounded-2xl border border-slate-700">
+              <span class="text-xs text-slate-400 block font-semibold">Điểm Cao Nhất</span>
+              <span class="text-3xl font-extrabold text-violet-400 mt-1 block">{{ highestExamScore }} / 20</span>
+              <span class="text-xs text-slate-400 mt-1 block">Kỷ lục thi thử</span>
+            </div>
+          </div>
+
+          <!-- Exam History Table -->
+          <div class="space-y-3">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Lịch sử bài thi thử</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm text-slate-300">
+                <thead class="bg-slate-900/90 text-xs text-slate-400 uppercase border-b border-slate-700">
+                  <tr>
+                    <th class="p-3">#</th>
+                    <th class="p-3">Thời gian</th>
+                    <th class="p-3">Điểm số</th>
+                    <th class="p-3">Thời gian làm</th>
+                    <th class="p-3">Đánh giá</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800">
+                  <tr v-for="(h, idx) in examHistory" :key="idx" class="hover:bg-slate-800/50">
+                    <td class="p-3 font-bold">{{ idx + 1 }}</td>
+                    <td class="p-3 text-slate-400">{{ h.date }}</td>
+                    <td class="p-3 font-bold text-indigo-400">{{ h.score }} / 20</td>
+                    <td class="p-3">{{ h.timeSpent }}</td>
+                    <td class="p-3">
+                      <span :class="[
+                        'text-xs font-bold px-2.5 py-0.5 rounded-full border',
+                        h.score >= 16 ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/40' : (h.score >= 10 ? 'bg-amber-900/40 text-amber-300 border-amber-500/40' : 'bg-rose-900/40 text-rose-300 border-rose-500/40')
+                      ]">
+                        {{ h.score >= 16 ? 'Xuất sắc' : (h.score >= 10 ? 'Đạt' : 'Cần cố gắng') }}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr v-if="examHistory.length === 0">
+                    <td colspan="5" class="p-6 text-center text-slate-400">Chưa có bài thi thử nào được ghi nhận.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900/80 border-t border-slate-800 py-6 text-center text-xs text-slate-400">
+      <div class="max-w-7xl mx-auto px-4">
+        <p>© 2026 Linear Algebra Master — Ứng dụng học tập & Luyện thi Đại số tuyến tính sắc nét với KaTeX.</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Vue 3 Application Script -->
+  <script>
+    const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
+
+    // Helper: Trigger KaTeX Math Render
+    const renderMath = () => {
+      nextTick(() => {
+        setTimeout(() => {
+          if (window.renderMathInElement) {
+            window.renderMathInElement(document.body, {
+              delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+              ],
+              throwOnError: false
+            });
+          }
+        }, 30);
+      });
+    };
+
+    createApp({
+      setup() {
+        // Navigation State
+        const activeTab = ref('practice');
+        const mobileMenuOpen = ref(false);
+
+        const tabs = [
+          { id: 'practice', name: 'Ôn Tập Theo Chương', icon: 'fas fa-book-open' },
+          { id: 'exam', name: 'Thi Thử (Mock Exam)', icon: 'fas fa-stopwatch' },
+          { id: 'solvers', name: 'Công Cụ Tính Toán', icon: 'fas fa-calculator' },
+          { id: 'theory', name: 'Sổ Tay Lý Thuyết', icon: 'fas fa-lightbulb' },
+          { id: 'stats', name: 'Thống Kê Tiến Độ', icon: 'fas fa-chart-bar' }
+        ];
+
+        const chapters = [
+          { id: 1, title: 'Hệ phương trình tuyến tính, Ma trận, Định thức' },
+          { id: 2, title: 'Không gian vectơ & Ánh xạ tuyến tính' },
+          { id: 3, title: 'Trị riêng, Vectơ riêng & Dạng toàn phương' }
+        ];
+
+        // --- FULL 60 QUESTION DATABASE ---
+        const allQuestions = [
+          // === CHƯƠNG 1 (1 - 20) ===
+          {
+            id: 1, chapter: 1,
+            question: "Cho ma trận $A_{3 \\times 4}$ và ma trận $B_{4 \\times 2}$. Kích thước của ma trận tích $A \\cdot B$ là:",
+            options: ["$3 \\times 2$", "$4 \\times 4$", "$3 \\times 4$", "Không thể nhân"],
+            correct: 0,
+            explanation: "Quy tắc nhân ma trận: Ma trận $A_{m \\times n}$ nhân được với ma trận $B_{n \\times p}$ tạo thành ma trận $C_{m \\times p}$. Ở đây $3 \\times 4$ nhân với $4 \\times 2$ ra ma trận $3 \\times 2$."
+          },
+          {
+            id: 2, chapter: 1,
+            question: "Tính định thức của ma trận $A = \\begin{pmatrix} 3 & 5 \\\\ 2 & 4 \\end{pmatrix}$:",
+            options: ["$2$", "$14$", "$22$", "$-2$"],
+            correct: 0,
+            explanation: "Định thức ma trận $2 \\times 2$ bằng: $\\det(A) = ad - bc = 3 \\cdot 4 - 5 \\cdot 2 = 12 - 10 = 2$."
+          },
+          {
+            id: 3, chapter: 1,
+            question: "Ma trận vuông $A$ cấp $n$ khả nghịch khi và chỉ khi:",
+            options: ["$\\det(A) \\neq 0$", "$\\det(A) = 0$", "$\\text{rank}(A) < n$", "$\\text{trace}(A) = 0$"],
+            correct: 0,
+            explanation: "Ma trận $A$ khả nghịch (không suy biến) $\\iff \\det(A) \\neq 0$ $\\iff \\text{rank}(A) = n$."
+          },
+          {
+            id: 4, chapter: 1,
+            question: "Nếu $\\text{rank}(A) = 2$ và $\\text{rank}(\\bar{A}) = 3$ thì hệ $Ax = b$:",
+            options: ["Duy nhất nghiệm", "Vô số nghiệm", "Vô nghiệm", "Có 2 nghiệm"],
+            correct: 2,
+            explanation: "Theo Định lý Kronecker - Capelli, hệ $Ax = b$ có nghiệm khi và chỉ khi $\\text{rank}(A) = \\text{rank}(\\bar{A})$. Vì $\\text{rank}(A) = 2 \\neq \\text{rank}(\\bar{A}) = 3$ nên hệ phương trình vô nghiệm."
+          },
+          {
+            id: 5, chapter: 1,
+            question: "Hệ phương trình tuyến tính thuần nhất $Ax = 0$ với $A_{n \\times n}$ có $\\det(A) \\neq 0$ thì:",
+            options: ["Chỉ có nghiệm tầm thường $x = 0$", "Có vô số nghiệm phụ thuộc tham số", "Vô nghiệm", "Có đúng $n$ nghiệm phân biệt"],
+            correct: 0,
+            explanation: "Vì $\\det(A) \\neq 0$ nên $A$ khả nghịch, $x = A^{-1} \\cdot 0 = 0$. Do đó hệ chỉ có duy nhất nghiệm tầm thường $x=0$."
+          },
+          {
+            id: 6, chapter: 1,
+            question: "Cho $A, B$ là các ma trận vuông cùng cấp. Khẳng định nào sau đây ĐÚNG?",
+            options: ["$(AB)^T = B^T A^T$", "$(AB)^T = A^T B^T$", "$\\det(A+B) = \\det(A) + \\det(B)$", "$AB = BA$ với mọi ma trận"],
+            correct: 0,
+            explanation: "Tính chất ma trận chuyển vị: $(AB)^T = B^T A^T$. Chú ý thứ tự bị đảo ngược."
+          },
+          {
+            id: 7, chapter: 1,
+            question: "Cho $A$ là ma trận vuông cấp $3$ có $\\det(A) = 4$. Tính $\\det(2A)$:",
+            options: ["$32$", "$8$", "$16$", "$24$"],
+            correct: 0,
+            explanation: "Tính chất định thức: Với $A$ cấp $n$, $\\det(k A) = k^n \\det(A)$. Ở đây $n=3$, do đó $\\det(2A) = 2^3 \\cdot \\det(A) = 8 \\cdot 4 = 32$."
+          },
+          {
+            id: 8, chapter: 1,
+            question: "Ma trận tam giác có định thức bằng:",
+            options: ["Tích các phần tử trên đường chéo chính", "Tổng các phần tử trên đường chéo chính", "$0$", "$1$"],
+            correct: 0,
+            explanation: "Định thức của ma trận tam giác (trên hoặc dưới) hoặc ma trận đường chéo bằng tích tất cả các phần tử nằm trên đường chéo chính."
+          },
+          {
+            id: 9, chapter: 1,
+            question: "Nếu $A$ khả nghịch và $\\det(A) = 5$ thì $\\det(A^{-1})$ bằng:",
+            options: ["$1/5$", "$-5$", "$5$", "$-1/5$"],
+            correct: 0,
+            explanation: "Ta có $A \\cdot A^{-1} = I \\implies \\det(A) \\cdot \\det(A^{-1}) = 1 \\implies \\det(A^{-1}) = 1/\\det(A) = 1/5$."
+          },
+          {
+            id: 10, chapter: 1,
+            question: "Ma trận vuông $A$ thỏa mãn $A^T = A$ được gọi là:",
+            options: ["Ma trận đối xứng", "Ma trận phản đối xứng", "Ma trận trực giao", "Ma trận đơn vị"],
+            correct: 0,
+            explanation: "Định nghĩa: Ma trận thỏa mãn $A^T = A$ là ma trận đối xứng."
+          },
+          {
+            id: 11, chapter: 1,
+            question: "Phép biến đổi sơ cấp trên dòng nào sau đây KHÔNG làm thay đổi định thức ma trận?",
+            options: ["Cộng vào một dòng một bội số của dòng khác", "Nhân một dòng với số $k \\neq 0$", "Đổi chỗ hai dòng", "Chia một dòng cho $2$"],
+            correct: 0,
+            explanation: "Cộng một dòng với bội số của dòng khác giữ nguyên định thức. Đổi chỗ 2 dòng làm đổi dấu định thức. Nhân 1 dòng với $k$ làm định thức nhân $k$."
+          },
+          {
+            id: 12, chapter: 1,
+            question: "Ma trận bổ sung $\\bar{A} = (A|b)$ của hệ $Ax = b$ được tạo thành bằng cách:",
+            options: ["Ghép thêm cột vectơ hằng số $b$ vào bên phải ma trận $A$", "Ghép thêm dòng $b$ vào bên dưới $A$", "Nhân ma trận $A$ với $b$", "Tính $A + b$"],
+            correct: 0,
+            explanation: "Ma trận bổ sung $\\bar{A}$ thu được bằng cách ghép cột vế phải $b$ vào sau ma trận hệ số $A$."
+          },
+          {
+            id: 13, chapter: 1,
+            question: "Quy tắc Cramer áp dụng để giải hệ phương trình tuyến tính $Ax = b$ khi:",
+            options: ["Số phương trình bằng số ẩn và $\\det(A) \\neq 0$", "$\\det(A) = 0$", "Số phương trình nhiều hơn số ẩn", "Hệ thuần nhất"],
+            correct: 0,
+            explanation: "Quy tắc Cramer áp dụng cho hệ vuông $n$ phương trình $n$ ẩn có $\\det(A) \\neq 0$."
+          },
+          {
+            id: 14, chapter: 1,
+            question: "Cho hệ phương trình $n$ ẩn $Ax = b$. Nếu $\\text{rank}(A) = \\text{rank}(\\bar{A}) = r < n$ thì hệ có:",
+            options: ["Vô số nghiệm phụ thuộc $n - r$ ẩn tự do", "Duy nhất nghiệm", "Vô nghiệm", "Đúng $r$ nghiệm"],
+            correct: 0,
+            explanation: "Theo Kronecker - Capelli, khi hạng bằng nhau nhưng nhỏ hơn số ẩn $n$, hệ có vô số nghiệm phụ thuộc $n - r$ tham số tự do."
+          },
+          {
+            id: 15, chapter: 1,
+            question: "Vết của ma trận $A = \\begin{pmatrix} 1 & 3 \\\\ 4 & 5 \\end{pmatrix}$, ký hiệu $\\text{trace}(A)$, bằng:",
+            options: ["$6$", "$-7$", "$20$", "$9$"],
+            correct: 0,
+            explanation: "Vết của ma trận bằng tổng các phần tử trên đường chéo chính: $\\text{trace}(A) = 1 + 5 = 6$."
+          },
+          {
+            id: 16, chapter: 1,
+            question: "Tính nghịch đảo của ma trận $A = \\begin{pmatrix} 1 & 2 \\\\ 3 & 4 \\end{pmatrix}$:",
+            options: [
+              "$\\begin{pmatrix} -2 & 1 \\\\ 1.5 & -0.5 \\end{pmatrix}$",
+              "$\\begin{pmatrix} 4 & -2 \\\\ -3 & 1 \\end{pmatrix}$",
+              "$\\begin{pmatrix} 1 & 0 \\\\ 0 & 1 \\end{pmatrix}$",
+              "Không tồn tại"
+            ],
+            correct: 0,
+            explanation: "Công thức $A^{-1} = \\frac{1}{ad-bc} \\begin{pmatrix} d & -b \\\\ -c & a \\end{pmatrix}$. Tại đây $\\det(A) = -2$, do đó $A^{-1} = -\\frac{1}{2}\\begin{pmatrix} 4 & -2 \\\\ -3 & 1 \\end{pmatrix} = \\begin{pmatrix} -2 & 1 \\\\ 1.5 & -0.5 \\end{pmatrix}$."
+          },
+          {
+            id: 17, chapter: 1,
+            question: "Hạng của ma trận $A = \\begin{pmatrix} 1 & 2 \\\\ 2 & 4 \\end{pmatrix}$ là:",
+            options: ["$1$", "$2$", "$0$", "$4$"],
+            correct: 0,
+            explanation: "Dòng 2 gấp 2 lần dòng 1, đưa về dạng bậc thang còn 1 dòng khác 0 $\\implies \\text{rank}(A) = 1$."
+          },
+          {
+            id: 18, chapter: 1,
+            question: "Ma trận vuông $A$ thỏa $A^2 = A$ được gọi là ma trận:",
+            options: ["Lũy đẳng (Idempotent)", "Trực giao", "Khả nghịch", "Đối xứng"],
+            correct: 0,
+            explanation: "Định nghĩa: Ma trận thỏa $A^2 = A$ gọi là ma trận lũy đẳng."
+          },
+          {
+            id: 19, chapter: 1,
+            question: "Giá trị định thức của ma trận đơn vị $I_n$ bằng:",
+            options: ["$1$", "$0$", "$n$", "Chưa xác định"],
+            correct: 0,
+            explanation: "Ma trận đơn vị là ma trận đường chéo với các phần tử trên đường chéo bằng $1$, nên định thức luôn bằng $1$."
+          },
+          {
+            id: 20, chapter: 1,
+            question: "Giải hệ phương trình $\\begin{cases} x + y = 3 \\\\ 2x + 3y = 8 \\end{cases}$. Nghiệm $(x, y)$ là:",
+            options: ["$(1, 2)$", "$(2, 1)$", "$(3, 0)$", "$(0, 3)$"],
+            correct: 0,
+            explanation: "Nhân PT (1) với 2: $2x + 2y = 6$. Trừ PT (2): $y = 2 \\implies x = 1$. Vậy nghiệm là $(1, 2)$."
+          },
+
+          // === CHƯƠNG 2 (21 - 40) ===
+          {
+            id: 21, chapter: 2,
+            question: "Số chiều của không gian vectơ $\\mathbb{R}^3$ là:",
+            options: ["$3$", "$4$", "$2$", "Vô hạn"],
+            correct: 0,
+            explanation: "Không gian $\\mathbb{R}^n$ có số chiều $\\dim(\\mathbb{R}^n) = n$. Vậy $\\dim(\\mathbb{R}^3) = 3$."
+          },
+          {
+            id: 22, chapter: 2,
+            question: "Tập hợp các vectơ $B = \\{(1,0,0), (0,1,0), (0,0,1)\\}$ tạo thành:",
+            options: ["Cơ sở chính chuẩn của $\\mathbb{R}^3$", "Tập phụ thuộc tuyến tính", "Không gian con", "Hạt nhân"],
+            correct: 0,
+            explanation: "Tập $B$ gồm các vectơ đơn vị chính chuẩn $e_1, e_2, e_3$, độc lập tuyến tính và sinh ra $\\mathbb{R}^3$, nên là cơ sở chính chuẩn."
+          },
+          {
+            id: 23, chapter: 2,
+            question: "Hai vectơ $u = (1, 2)$ và $v = (2, 4)$ trong $\\mathbb{R}^2$ là:",
+            options: ["Phụ thuộc tuyến tính", "Độc lập tuyến tính", "Trực giao", "Cơ sở của $\\mathbb{R}^2$"],
+            correct: 0,
+            explanation: "Vì $v = 2u$ nên hai vectơ cùng phương, do đó phụ thuộc tuyến tính."
+          },
+          {
+            id: 24, chapter: 2,
+            question: "Cho ánh xạ tuyến tính $f: V \\to W$. Hạt nhân $\\ker(f)$ được định nghĩa là:",
+            options: [
+              "$\\{v \\in V \\mid f(v) = 0\\}$",
+              "$\\{w \\in W \\mid \\exists v, f(v) = w\\}$",
+              "$\\{v \\in V \\mid f(v) = v\\}$",
+              "Tập các trị riêng"
+            ],
+            correct: 0,
+            explanation: "Định nghĩa: $\\ker(f)$ là tập tất cả các vectơ $v \\in V$ có ảnh qua $f$ bằng vectơ không $0$."
+          },
+          {
+            id: 25, chapter: 2,
+            question: "Công thức chiều Rank - Nullity đối với ánh xạ tuyến tính $f: V \\to W$ là:",
+            options: [
+              "$\\dim(\\ker f) + \\dim(\\text{Im} f) = \\dim(V)$",
+              "$\\dim(\\ker f) + \\dim(\\text{Im} f) = \\dim(W)$",
+              "$\\dim(\\ker f) = \\dim(\\text{Im} f)$",
+              "$\\dim(V) = \\dim(W)$"
+            ],
+            correct: 0,
+            explanation: "Định lý về số chiều: Tổng số chiều của Hạt nhân $\\ker f$ và Ảnh $\\text{Im} f$ đúng bằng số chiều của không gian nguồn $V$."
+          },
+          {
+            id: 26, chapter: 2,
+            question: "Số chiều của không gian nghiệm của hệ thuần nhất $Ax = 0$ với $A_{m \\times n}$ là:",
+            options: ["$n - \\text{rank}(A)$", "$\\text{rank}(A)$", "$m - \\text{rank}(A)$", "$n$"],
+            correct: 0,
+            explanation: "Không gian nghiệm của hệ thuần nhất có số chiều bằng $n - r$, trong đó $n$ là số ẩn và $r = \\text{rank}(A)$."
+          },
+          {
+            id: 27, chapter: 2,
+            question: "Ánh xạ tuyến tính $f$ là một đơn ánh khi và chỉ khi:",
+            options: ["$\\ker(f) = \\{0\\}$", "$\\text{Im}(f) = \\{0\\}$", "$\\dim(V) = 0$", "$\\text{rank}(A) = 0$"],
+            correct: 0,
+            explanation: "Ánh xạ tuyến tính đơn ánh $\\iff \\ker(f)$ chỉ chứa duy nhất vectơ không $0$."
+          },
+          {
+            id: 28, chapter: 2,
+            question: "Cho $U, V$ là hai không gian con của $W$. Công thức số chiều nào sau đây ĐÚNG?",
+            options: [
+              "$\\dim(U + V) = \\dim U + \\dim V - \\dim(U \\cap V)$",
+              "$\\dim(U + V) = \\dim U + \\dim V$",
+              "$\\dim(U \\cap V) = \\dim U \\cdot \\dim V$",
+              "$\\dim(U + V) = \\dim(U \\cap V)$"
+            ],
+            correct: 0,
+            explanation: "Công thức Grassman tính số chiều của tổng hai không gian con: $\\dim(U+V) = \\dim U + \\dim V - \\dim(U \\cap V)$."
+          },
+          {
+            id: 29, chapter: 2,
+            question: "Chuẩn Euclidean của vectơ $v = (3, 4)$ trong $\\mathbb{R}^2$ là:",
+            options: ["$5$", "$7$", "$12$", "$\\sqrt{7}$"],
+            correct: 0,
+            explanation: "Chuẩn $\|v\| = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$."
+          },
+          {
+            id: 30, chapter: 2,
+            question: "Tích vô hướng của hai vectơ $u = (1, 3)$ và $v = (4, -1)$ là:",
+            options: ["$1$", "$7$", "$11$", "$-2$"],
+            correct: 0,
+            explanation: "Tích vô hướng $u \\cdot v = 1 \\cdot 4 + 3 \\cdot (-1) = 4 - 3 = 1$."
+          },
+          {
+            id: 31, chapter: 2,
+            question: "Hai vectơ $u$ và $v$ trực giao với nhau khi và chỉ khi:",
+            options: ["$u \\cdot v = 0$", "$u \\cdot v = 1$", "$\\|u\\| = \\|v\\|$", "$u = v$"],
+            correct: 0,
+            explanation: "Định nghĩa: Hai vectơ trực giao $\\iff$ Tích vô hướng của chúng bằng $0$."
+          },
+          {
+            id: 32, chapter: 2,
+            question: "Ma trận biểu diễn ánh xạ tuyến tính $f(x, y) = (2x + y, x - 3y)$ trong cơ sở chính chuẩn là:",
+            options: [
+              "$\\begin{pmatrix} 2 & 1 \\\\ 1 & -3 \\end{pmatrix}$",
+              "$\\begin{pmatrix} 2 & 1 \\\\ -3 & 1 \\end{pmatrix}$",
+              "$\\begin{pmatrix} 1 & 2 \\\\ 1 & -3 \\end{pmatrix}$",
+              "$\\begin{pmatrix} 2 & -3 \\\\ 1 & 1 \\end{pmatrix}$"
+            ],
+            correct: 0,
+            explanation: "Tọa độ ảnh: dòng 1 lấy hệ số của $x, y$ là $(2, 1)$, dòng 2 lấy hệ số $(1, -3)$. Ma trận là $\\begin{pmatrix} 2 & 1 \\\\ 1 & -3 \\end{pmatrix}$."
+          },
+          {
+            id: 33, chapter: 2,
+            question: "Tập hợp tất cả các vectơ dạng $(x, y, 0)$ trong $\\mathbb{R}^3$ tạo thành:",
+            options: ["Không gian con có số chiều bằng $2$", "Không gian con có số chiều bằng $3$", "Không phải không gian con", "Cơ sở của $\\mathbb{R}^3$"],
+            correct: 0,
+            explanation: "Đây là mặt phẳng $Oxy$ trong $\\mathbb{R}^3$, đóng kín đối với phép cộng và nhân số, số chiều bằng $2$."
+          },
+          {
+            id: 34, chapter: 2,
+            question: "Tọa độ của vectơ $v = (5, 7)$ đối với cơ sở chính chuẩn của $\\mathbb{R}^2$ là:",
+            options: ["$(5, 7)$", "$(7, 5)$", "$(1, 1)$", "$(12, -2)$"],
+            correct: 0,
+            explanation: "Trong cơ sở chính chuẩn $e_1=(1,0), e_2=(0,1)$, ta có $v = 5e_1 + 7e_2$ nên tọa độ chính là $(5, 7)$."
+          },
+          {
+            id: 35, chapter: 2,
+            question: "Tập gồm duy nhất vectơ không $\\{0\\}$ có số chiều bằng:",
+            options: ["$0$", "$1$", "Khống xác định", "$-1$"],
+            correct: 0,
+            explanation: "Quy ước: Không gian vectơ không $\\{0\\}$ có số chiều bằng $0$."
+          },
+          {
+            id: 36, chapter: 2,
+            question: "Đẳng cấu tuyến tính là một ánh xạ tuyến tính:",
+            options: ["Song ánh (vừa đơn ánh vừa toàn ánh)", "Chỉ cần đơn ánh", "Chỉ cần toàn ánh", "Không cần tuyến tính"],
+            correct: 0,
+            explanation: "Định nghĩa: Ánh xạ tuyến tính là đẳng cấu $\\iff$ nó là một song ánh."
+          },
+          {
+            id: 37, chapter: 2,
+            question: "Cho $f: \\mathbb{R}^3 \\to \\mathbb{R}^2$ có $\\dim(\\ker f) = 1$. Chiều của ảnh $\\dim(\\text{Im} f)$ bằng:",
+            options: ["$2$", "$1$", "$3$", "$0$"],
+            correct: 0,
+            explanation: "Theo Rank - Nullity: $\\dim(\\ker f) + \\dim(\\text{Im} f) = \\dim(\\mathbb{R}^3) = 3 \\implies 1 + \\dim(\\text{Im} f) = 3 \\implies \\dim(\\text{Im} f) = 2$."
+          },
+          {
+            id: 38, chapter: 2,
+            question: "Khoảng cách Euclidean giữa hai điểm $u = (1, 2)$ và $v = (4, 6)$ là:",
+            options: ["$5$", "$25$", "$\\sqrt{7}$", "$7$"],
+            correct: 0,
+            explanation: "$d(u,v) = \\sqrt{(4-1)^2 + (6-2)^2} = \\sqrt{3^2 + 4^2} = \\sqrt{25} = 5$."
+          },
+          {
+            id: 39, chapter: 2,
+            question: "Bất đẳng thức Cauchy - Schwarz đối với hai vectơ $u, v$ khẳng định rằng:",
+            options: [
+              "$|u \\cdot v| \\le \\|u\\| \\cdot \\|v\\|$",
+              "$|u \\cdot v| \\ge \\|u\\| \\cdot \\|v\\|$",
+              "$\\|u + v\\| = \\|u\\| + \\|v\\|$",
+              "$u \\cdot v = \\|u\\| + \\|v\\|$"
+            ],
+            correct: 0,
+            explanation: "Bất đẳng thức Cauchy-Schwarz chuẩn: $|u \\cdot v| \\le \\|u\\| \\cdot \\|v\\|$."
+          },
+          {
+            id: 40, chapter: 2,
+            question: "Nếu tập $S$ gồm $4$ vectơ trong không gian $\\mathbb{R}^3$ thì $S$ chắc chắn:",
+            options: ["Phụ thuộc tuyến tính", "Độc lập tuyến tính", "Là một cơ sở của $\\mathbb{R}^3$", "Chứa vectơ không"],
+            correct: 0,
+            explanation: "Vì số lượng vectơ ($4$) lớn hơn số chiều không gian ($3$), tập $S$ bắt buộc phải phụ thuộc tuyến tính."
+          },
+
+          // === CHƯƠNG 3 (41 - 60) ===
+          {
+            id: 41, chapter: 3,
+            question: "Phương trình đặc trưng để tìm trị riêng $\\lambda$ của ma trận $A$ là:",
+            options: [
+              "$\\det(A - \\lambda I) = 0$",
+              "$\\det(A + \\lambda I) = 0$",
+              "$\\text{trace}(A) = \\lambda$",
+              "$A x = \\lambda$"
+            ],
+            correct: 0,
+            explanation: "Định nghĩa trị riêng: Vectơ $x \\neq 0$ thỏa $Ax = \\lambda x \\iff (A - \\lambda I)x = 0$. Phương trình có nghiệm phi tầm thường $\\iff \\det(A - \\lambda I) = 0$."
+          },
+          {
+            id: 42, chapter: 3,
+            question: "Trị riêng của ma trận tam giác $A = \\begin{pmatrix} 2 & 3 \\\\ 0 & 5 \\end{pmatrix}$ là:",
+            options: ["$\\lambda_1 = 2, \\lambda_2 = 5$", "$\\lambda_1 = 3, \\lambda_2 = 0$", "$\\lambda = 7$", "$\\lambda = 10$"],
+            correct: 0,
+            explanation: "Đối với ma trận tam giác, các trị riêng chính là các phần tử nằm trên đường chéo chính: $2$ và $5$."
+          },
+          {
+            id: 43, chapter: 3,
+            question: "Tổng tất cả các trị riêng của ma trận vuông $A$ luôn bằng:",
+            options: ["$\\text{trace}(A)$ (Vết của $A$)", "$\\det(A)$", "$0$", "$1$"],
+            correct: 0,
+            explanation: "Tính chất trị riêng: Tổng các trị riêng bằng vết của ma trận $\\sum \\lambda_i = \\text{trace}(A)$."
+          },
+          {
+            id: 44, chapter: 3,
+            question: "Tích tất cả các trị riêng của ma trận vuông $A$ luôn bằng:",
+            options: ["$\\det(A)$", "$\\text{trace}(A)$", "$1$", "$n$"],
+            correct: 0,
+            explanation: "Tính chất trị riêng: Tích các trị riêng bằng định thức ma trận $\\prod \\lambda_i = \\det(A)$."
+          },
+          {
+            id: 45, chapter: 3,
+            question: "Dạng toàn phương $Q(x_1, x_2) = 2x_1^2 + 4x_1 x_2 + 5x_2^2$ có ma trận biểu diễn là:",
+            options: [
+              "$\\begin{pmatrix} 2 & 2 \\\\ 2 & 5 \\end{pmatrix}$",
+              "$\\begin{pmatrix} 2 & 4 \\\\ 0 & 5 \\end{pmatrix}$",
+              "$\\begin{pmatrix} 2 & 4 \\\\ 4 & 5 \\end{pmatrix}$",
+              "$\\begin{pmatrix} 5 & 2 \\\\ 2 & 2 \\end{pmatrix}$"
+            ],
+            correct: 0,
+            explanation: "Ma trận đối xứng $A$: phần tử $a_{11}=2, a_{22}=5$. Hệ số $x_1 x_2$ chia đôi: $a_{12} = a_{21} = 4/2 = 2$."
+          },
+          {
+            id: 46, chapter: 3,
+            question: "Theo Tiêu chuẩn Sylvester, dạng toàn phương xác định dương khi và chỉ khi:",
+            options: [
+              "Tất cả các định thức con chính đều dương $(\\Delta_i > 0)$",
+              "Các định thức con chính đan dấu",
+              "$\\det(A) < 0$",
+              "Vết ma trận bằng $0$"
+            ],
+            correct: 0,
+            explanation: "Định lý Sylvester: Ma trận $A$ xác định dương $\\iff$ Mọi định thức con chính $\\Delta_1, \\Delta_2, \\dots, \\Delta_n > 0$."
+          },
+          {
+            id: 47, chapter: 3,
+            question: "Nếu $\\lambda$ là một trị riêng của ma trận $A$ thì trị riêng của ma trận $A^2$ là:",
+            options: ["$\\lambda^2$", "$2\\lambda$", "$\\sqrt{\\lambda}$", "$1/\\lambda$"],
+            correct: 0,
+            explanation: "Ta có $Ax = \\lambda x \\implies A^2 x = A(Ax) = A(\\lambda x) = \\lambda (Ax) = \\lambda^2 x$. Vậy trị riêng là $\\lambda^2$."
+          },
+          {
+            id: 48, chapter: 3,
+            question: "Ma trận vuông $A_{n \\times n}$ chéo hóa được khi và chỉ khi $A$ có:",
+            options: [
+              "$n$ vectơ riêng độc lập tuyến tính",
+              "$n$ trị riêng bằng $0$",
+              "$\\det(A) = 0$",
+              "Ma trận là tam giác"
+            ],
+            correct: 0,
+            explanation: "Điều kiện chéo hóa: Ma trận $A_{n \\times n}$ chéo hóa được $\\iff$ Có đủ $n$ vectơ riêng độc lập tuyến tính."
+          },
+          {
+            id: 49, chapter: 3,
+            question: "Ma trận thực đối xứng $A$ luôn có tính chất đặc biệt nào?",
+            options: [
+              "Luôn chéo hóa được bằng ma trận trực giao",
+              "Không bao giờ có trị riêng thực",
+              "Định thức luôn bằng $0$",
+              "Không chéo hóa được"
+            ],
+            correct: 0,
+            explanation: "Định lý phổ: Mọi ma trận thực đối xứng đều có các trị riêng thực và chéo hóa được bằng ma trận trực giao."
+          },
+          {
+            id: 50, chapter: 3,
+            question: "Vectơ riêng ứng với các trị riêng phân biệt của ma trận thực đối xứng thì:",
+            options: ["Trực giao với nhau", "Bằng nhau", "Phụ thuộc tuyến tính", "Cùng phương"],
+            correct: 0,
+            explanation: "Tính chất: Các vectơ riêng thuộc về các không gian riêng ứng với các trị riêng khác nhau của ma trận đối xứng thì vuông góc (trực giao) với nhau."
+          },
+          {
+            id: 51, chapter: 3,
+            question: "Cho $A$ khả nghịch có trị riêng $\\lambda \\neq 0$. Trị riêng của $A^{-1}$ là:",
+            options: ["$1/\\lambda$", "$-\\lambda$", "$\\lambda$", "$\\lambda^2$"],
+            correct: 0,
+            explanation: "Từ $Ax = \\lambda x \\implies x = A^{-1}(\\lambda x) \\implies A^{-1}x = \\frac{1}{\\lambda} x$. Do đó trị riêng là $1/\\lambda$."
+          },
+          {
+            id: 52, chapter: 3,
+            question: "Dạng chính tắc của dạng toàn phương là dạng chỉ chứa:",
+            options: [
+              "Các bình phương số hạng (không chứa tích hỗn hợp $x_i x_j$)",
+              "Các tích hỗn hợp $x_1 x_2$",
+              "Hằng số tự do",
+              "Bậc ba"
+            ],
+            correct: 0,
+            explanation: "Định nghĩa: Dạng chính tắc là dạng toàn phương đã triệt tiêu các tích hỗn hợp, chỉ còn dạng $c_1 y_1^2 + c_2 y_2^2 + \\dots + c_n y_n^2$."
+          },
+          {
+            id: 53, chapter: 3,
+            question: "Phương pháp Lagrange dùng để:",
+            options: [
+              "Đưa dạng toàn phương về dạng chính tắc bằng biến đổi bình phương",
+              "Tính định thức ma trận",
+              "Tìm ma trận nghịch đảo",
+              "Giải hệ phương trình"
+            ],
+            correct: 0,
+            explanation: "Thuật toán Lagrange là phương pháp tách bình phương liên tiếp để đưa dạng toàn phương về dạng chính tắc."
+          },
+          {
+            id: 54, chapter: 3,
+            question: "Dạng toàn phương $Q(x_1, x_2) = -x_1^2 - 3x_2^2$ là dạng toàn phương:",
+            options: ["Xác định âm", "Xác định dương", "Bán xác định dương", "Không xác định"],
+            correct: 0,
+            explanation: "Vì $Q(x) < 0$ với mọi $(x_1, x_2) \\neq (0,0)$ nên dạng toàn phương này xác định âm."
+          },
+          {
+            id: 55, chapter: 3,
+            question: "Số chỉ số dương (chỉ số inertia dương) của dạng toàn phương là:",
+            options: [
+              "Số hệ số dương trong dạng chính tắc",
+              "Tổng các hệ số",
+              "Số lượng biến",
+              "Hạng ma trận"
+            ],
+            correct: 0,
+            explanation: "Theo Luật quán tính Jacobi - Sylvester, số lượng hệ số dương trong dạng chính tắc là duy nhất và gọi là chỉ số quán tính dương."
+          },
+          {
+            id: 56, chapter: 3,
+            question: "Cho ma trận $A = \\begin{pmatrix} 1 & 0 \\\\ 0 & 3 \\end{pmatrix}$. Vectơ riêng ứng với trị riêng $\\lambda = 1$ là:",
+            options: ["$k(1, 0)^T$ với $k \\neq 0$", "$k(0, 1)^T$", "$k(1, 1)^T$", "$k(3, 1)^T$"],
+            correct: 0,
+            explanation: "Giải $(A - 1I)x = 0 \\implies \\begin{pmatrix} 0 & 0 \\\\ 0 & 2 \\end{pmatrix} \\begin{pmatrix} x_1 \\\\ x_2 \\end{pmatrix} = 0 \\implies x_2 = 0, x_1$ tự do."
+          },
+          {
+            id: 57, chapter: 3,
+            question: "Ma trận $P$ gọi là ma trận trực giao khi và chỉ khi:",
+            options: ["$P^T P = I$ (tức $P^{-1} = P^T$)", "$P^T = P$", "$\\det(P) = 0$", "$P^2 = I$"],
+            correct: 0,
+            explanation: "Định nghĩa ma trận trực giao: Các cột của $P$ lập thành cơ sở trực chuẩn $\\iff P^T P = I \\iff P^{-1} = P^T$."
+          },
+          {
+            id: 58, chapter: 3,
+            question: "Nếu ma trận $A$ có các trị riêng là $1, 2, 3$ thì $\\det(A)$ bằng:",
+            options: ["$6$", "$5$", "$1$", "$0$"],
+            correct: 0,
+            explanation: "Định thức bằng tích các trị riêng: $\\det(A) = 1 \\cdot 2 \\cdot 3 = 6$."
+          },
+          {
+            id: 59, chapter: 3,
+            question: "Nếu ma trận $A$ có các trị riêng là $1, 2, 3$ thì $\\text{trace}(A)$ bằng:",
+            options: ["$6$", "$5$", "$1$", "$0$"],
+            correct: 0,
+            explanation: "Vết bằng tổng các trị riêng: $\\text{trace}(A) = 1 + 2 + 3 = 6$."
+          },
+          {
+            id: 60, chapter: 3,
+            question: "Ứng dụng quan trọng của việc chéo hóa ma trận $A = P D P^{-1}$ là:",
+            options: [
+              "Tính nhanh lũy thừa ma trận $A^k = P D^k P^{-1}$",
+              "Tính định thức dễ sai hơn",
+              "Tìm ma trận bổ sung",
+              "Không có ứng dụng"
+            ],
+            correct: 0,
+            explanation: "Vì $D$ là ma trận đường chéo nên $D^k$ cực kỳ dễ tính. Do đó $A^k = (P D P^{-1})^k = P D^k P^{-1}$."
+          }
+        ];
+
+        // --- PRACTICE STATE ---
+        const selectedChapter = ref(1);
+        const currentQuestionIdx = ref(0);
+        const practiceAnswers = ref({});
+
+        const currentChapterQuestions = computed(() => {
+          return allQuestions.filter(q => q.chapter === selectedChapter.value);
+        });
+
+        const currentQuestion = computed(() => {
+          return currentChapterQuestions.value[currentQuestionIdx.value] || null;
+        });
+
+        const selectChapter = (chId) => {
+          selectedChapter.value = chId;
+          currentQuestionIdx.value = 0;
+          renderMath();
+        };
+
+        const answerPracticeQuestion = (qId, optionIdx) => {
+          practiceAnswers.value[qId] = optionIdx;
+          saveStateToStorage();
+          renderMath();
+        };
+
+        const resetCurrentQuestion = () => {
+          if (currentQuestion.value) {
+            delete practiceAnswers.value[currentQuestion.value.id];
+            saveStateToStorage();
+            renderMath();
+          }
+        };
+
+        const nextQuestion = () => {
+          if (currentQuestionIdx.value < currentChapterQuestions.value.length - 1) {
+            currentQuestionIdx.value++;
+            renderMath();
+          }
+        };
+
+        const prevQuestion = () => {
+          if (currentQuestionIdx.value > 0) {
+            currentQuestionIdx.value--;
+            renderMath();
+          }
+        };
+
+        const getChapterAnsweredCount = (chId) => {
+          const chQs = allQuestions.filter(q => q.chapter === chId);
+          return chQs.filter(q => practiceAnswers.value[q.id] !== undefined).length;
+        };
+
+        const getOptionStyle = (q, oIdx) => {
+          const userAns = practiceAnswers.value[q.id];
+          if (userAns === undefined) {
+            return 'bg-slate-900/60 border-slate-700/80 hover:border-indigo-500 hover:bg-slate-800 text-slate-200';
+          }
+          if (oIdx === q.correct) {
+            return 'bg-emerald-950/60 border-emerald-500 text-emerald-100 font-semibold ring-1 ring-emerald-500';
+          }
+          if (userAns === oIdx && userAns !== q.correct) {
+            return 'bg-rose-950/60 border-rose-500 text-rose-100 font-semibold ring-1 ring-rose-500';
+          }
+          return 'bg-slate-900/40 border-slate-800 text-slate-500 opacity-60';
+        };
+
+        const getOptionBadgeStyle = (q, oIdx) => {
+          const userAns = practiceAnswers.value[q.id];
+          if (userAns === undefined) {
+            return 'bg-slate-800 border-slate-700 text-slate-300';
+          }
+          if (oIdx === q.correct) {
+            return 'bg-emerald-600 border-emerald-400 text-white';
+          }
+          if (userAns === oIdx && userAns !== q.correct) {
+            return 'bg-rose-600 border-rose-400 text-white';
+          }
+          return 'bg-slate-900 border-slate-800 text-slate-600';
+        };
+
+        // --- MOCK EXAM STATE ---
+        const examState = ref('idle'); // idle, active, result
+        const examQuestions = ref([]);
+        const examUserAnswers = ref([]);
+        const examCurrentIdx = ref(0);
+        const examTimerSeconds = ref(1800); // 30 minutes
+        let examTimerInterval = null;
+        const examTimeSpentSeconds = ref(0);
+
+        const startExam = () => {
+          // Select 20 balanced random questions across chapters
+          const ch1 = allQuestions.filter(q => q.chapter === 1).sort(() => 0.5 - Math.random()).slice(0, 7);
+          const ch2 = allQuestions.filter(q => q.chapter === 2).sort(() => 0.5 - Math.random()).slice(0, 7);
+          const ch3 = allQuestions.filter(q => q.chapter === 3).sort(() => 0.5 - Math.random()).slice(0, 6);
+          
+          examQuestions.value = [...ch1, ...ch2, ...ch3].sort(() => 0.5 - Math.random());
+          examUserAnswers.value = new Array(20).fill(undefined);
+          examCurrentIdx.value = 0;
+          examTimerSeconds.value = 1800;
+          examTimeSpentSeconds.value = 0;
+          examState.value = 'active';
+
+          if (examTimerInterval) clearInterval(examTimerInterval);
+          examTimerInterval = setInterval(() => {
+            if (examTimerSeconds.value > 0) {
+              examTimerSeconds.value--;
+              examTimeSpentSeconds.value++;
+            } else {
+              finishExam();
+            }
+          }, 1000);
+
+          renderMath();
+        };
+
+        const selectExamOption = (qIdx, oIdx) => {
+          examUserAnswers.value[qIdx] = oIdx;
+        };
+
+        const answeredExamCount = computed(() => {
+          return examUserAnswers.value.filter(a => a !== undefined).length;
+        });
+
+        const formattedExamTime = computed(() => {
+          const m = Math.floor(examTimerSeconds.value / 60);
+          const s = examTimerSeconds.value % 60;
+          return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        });
+
+        const formattedTimeSpent = computed(() => {
+          const m = Math.floor(examTimeSpentSeconds.value / 60);
+          const s = examTimeSpentSeconds.value % 60;
+          return `${m} phút ${s} giây`;
+        });
+
+        const confirmSubmitExam = () => {
+          if (confirm('Bạn có chắc chắn muốn nộp bài thi ngay bây giờ?')) {
+            finishExam();
+          }
+        };
+
+        const examScore = computed(() => {
+          let score = 0;
+          examQuestions.value.forEach((q, idx) => {
+            if (examUserAnswers.value[idx] === q.correct) {
+              score++;
+            }
+          });
+          return score;
+        });
+
+        const finishExam = () => {
+          if (examTimerInterval) clearInterval(examTimerInterval);
+          examState.value = 'result';
+
+          // Save to history
+          examHistory.value.unshift({
+            date: new Date().toLocaleString('vi-VN'),
+            score: examScore.value,
+            timeSpent: formattedTimeSpent.value
+          });
+
+          saveStateToStorage();
+          renderMath();
+        };
+
+        // --- SOLVERS STATE ---
+        const solverMode = ref('det');
+        const detSize = ref(2);
+        const det2 = ref([[3, 5], [2, 4]]);
+        const det3 = ref([[1, 2, 3], [0, 1, 4], [5, 6, 0]]);
+
+        const computedDet = computed(() => {
+          if (detSize.value === 2) {
+            return (det2.value[0][0] * det2.value[1][1]) - (det2.value[0][1] * det2.value[1][0]);
+          } else {
+            const m = det3.value;
+            return m[0][0]*(m[1][1]*m[2][2] - m[1][2]*m[2][1])
+                 - m[0][1]*(m[1][0]*m[2][2] - m[1][2]*m[2][0])
+                 + m[0][2]*(m[1][0]*m[2][1] - m[1][1]*m[2][0]);
+          }
+        });
+
+        const vecUInput = ref("1, 2, 3");
+        const vecVInput = ref("4, 5, 6");
+
+        const computedVectorStats = computed(() => {
+          try {
+            const u = vecUInput.value.split(',').map(n => parseFloat(n.trim())).filter(n => !isNaN(n));
+            const v = vecVInput.value.split(',').map(n => parseFloat(n.trim())).filter(n => !isNaN(n));
+            if (u.length === 0 || u.length !== v.length) return null;
+
+            let dot = 0;
+            let normUSq = 0;
+            let normVSq = 0;
+            let distSq = 0;
+
+            for (let i = 0; i < u.length; i++) {
+              dot += u[i] * v[i];
+              normUSq += u[i] * u[i];
+              normVSq += v[i] * v[i];
+              distSq += (u[i] - v[i]) * (u[i] - v[i]);
+            }
+
+            const normU = Math.sqrt(normUSq);
+            const normV = Math.sqrt(normVSq);
+            const dist = Math.sqrt(distSq);
+            const cos = (normU * normV === 0) ? 0 : Math.max(-1, Math.min(1, dot / (normU * normV)));
+            const angleRad = Math.acos(cos);
+            const angleDeg = angleRad * (180 / Math.PI);
+
+            return { dot, normU, normV, dist, angleDeg };
+          } catch (e) {
+            return null;
+          }
+        });
+
+        const matA = ref([[1, 2], [3, 4]]);
+        const matB = ref([[2, 0], [1, 2]]);
+
+        // --- STATS & LOCALSTORAGE ---
+        const examHistory = ref([]);
+
+        const totalPracticeAnswered = computed(() => Object.keys(practiceAnswers.value).length);
+        
+        const practiceAccuracy = computed(() => {
+          if (totalPracticeAnswered.value === 0) return 0;
+          let correct = 0;
+          Object.keys(practiceAnswers.value).forEach(qId => {
+            const q = allQuestions.find(item => item.id === parseInt(qId));
+            if (q && practiceAnswers.value[qId] === q.correct) correct++;
+          });
+          return Math.round((correct / totalPracticeAnswered.value) * 100);
+        });
+
+        const highestExamScore = computed(() => {
+          if (examHistory.value.length === 0) return 0;
+          return Math.max(...examHistory.value.map(h => h.score));
+        });
+
+        const saveStateToStorage = () => {
+          localStorage.setItem('la_practice_answers', JSON.stringify(practiceAnswers.value));
+          localStorage.setItem('la_exam_history', JSON.stringify(examHistory.value));
+        };
+
+        const loadStateFromStorage = () => {
+          const savedAnswers = localStorage.getItem('la_practice_answers');
+          if (savedAnswers) practiceAnswers.value = JSON.parse(savedAnswers);
+
+          const savedHistory = localStorage.getItem('la_exam_history');
+          if (savedHistory) examHistory.value = JSON.parse(savedHistory);
+        };
+
+        const clearStats = () => {
+          if (confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử học tập không?')) {
+            practiceAnswers.value = {};
+            examHistory.value = [];
+            saveStateToStorage();
+          }
+        };
+
+        const switchTab = (tabId) => {
+          activeTab.value = tabId;
+          renderMath();
+        };
+
+        const triggerMathRender = () => {
+          renderMath();
+        };
+
+        onMounted(() => {
+          loadStateFromStorage();
+          renderMath();
+        });
+
+        return {
+          activeTab,
+          mobileMenuOpen,
+          tabs,
+          chapters,
+          selectedChapter,
+          currentQuestionIdx,
+          currentChapterQuestions,
+          currentQuestion,
+          practiceAnswers,
+          selectChapter,
+          answerPracticeQuestion,
+          resetCurrentQuestion,
+          nextQuestion,
+          prevQuestion,
+          getChapterAnsweredCount,
+          getOptionStyle,
+          getOptionBadgeStyle,
+          
+          // Exam
+          examState,
+          examQuestions,
+          examUserAnswers,
+          examCurrentIdx,
+          formattedExamTime,
+          formattedTimeSpent,
+          answeredExamCount,
+          startExam,
+          selectExamOption,
+          confirmSubmitExam,
+          examScore,
+
+          // Solvers
+          solverMode,
+          detSize,
+          det2,
+          det3,
+          computedDet,
+          vecUInput,
+          vecVInput,
+          computedVectorStats,
+          matA,
+          matB,
+
+          // Stats
+          examHistory,
+          totalPracticeAnswered,
+          practiceAccuracy,
+          highestExamScore,
+          clearStats,
+
+          switchTab,
+          triggerMathRender
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
